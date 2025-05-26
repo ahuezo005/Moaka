@@ -1,14 +1,20 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter} from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter} from 'next/navigation';
+import { useEffect, useState, ReactNode } from 'react';
 
-export default function ClientLayoutLogic({ children, isAuthenticated, unreadNotificationsCount}) {
+interface ClientLayoutLogicProps {
+  children: ReactNode;
+  isAuthenticated: boolean;
+  unreadNotificationsCount: number;
+}
+
+export default function ClientLayoutLogic({ children, isAuthenticated, unreadNotificationsCount}: ClientLayoutLogicProps) {
     const router = useRouter();
-    const [sidebarCollpased, setSidebarCollapsed] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
-    const [currentPath, setCurrentPath] = useState('');
+    const currentPath = usePathname();
+    const [sidebarCollpased, setSidebarCollapsed] = useState<boolean>(false);
+    const [darkMode, setDarkMode] = useState<boolean>(false);
 
     useEffect(() => {
         const storedSidebarState = localStorage.getItem('sidebarState');
@@ -96,7 +102,7 @@ export default function ClientLayoutLogic({ children, isAuthenticated, unreadNot
             </div>
         </aside>
 
-        <main className="main">
+        <main className={'main-content ${sidebarCollpased ? "sidebar-collapsed" : ""}'}>
             <div className="main-header">
                 {children}
             </div>

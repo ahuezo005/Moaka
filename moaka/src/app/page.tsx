@@ -1,103 +1,120 @@
-import Image from "next/image";
+import PostCard from '../../../components/PostCard'; // Adjust path
+import Link from 'next/link';
+import { FormEvent } from 'react'; // For typing event handlers if needed
 
-export default function Home() {
+interface Author {
+  username: string;
+}
+
+interface Topic {
+  slug: string;
+  name: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  timestamp: string;
+  media_url: string | null;
+  tag: string | null;
+  score: number;
+  replies_count: number;
+  author: Author;
+  topic: Topic;
+}
+
+async function getPosts(sort: string = 'recent'): Promise<Post[]> {
+  // Replace with API later tbh
+  console.log(`Workspaceing posts with sort: ${sort}`);
+  // Mock data
+  return [
+    {
+      id: 1,
+      title: 'My First Next.js Post',
+      content: 'testing posting',
+      timestamp: new Date().toISOString(),
+      media_url: 'placeholder-image.jpg',
+      tag: 'Next.js',
+      score: 10,
+      replies_count: 5,
+      author: { username: 'nextjsfan' },
+      topic: { slug: 'nextjs-learning', name: 'Next.js Learning' },
+    },
+    {
+      id: 2,
+      title: 'Understanding Components',
+      content: 'Components are the building blocks of React applications. This card is a component!',
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      media_url: null,
+      tag: 'React',
+      score: 22,
+      replies_count: 3,
+      author: { username: 'reactdev' },
+      topic: { slug: 'react-basics', name: 'React Basics' },
+    },
+  ];
+}
+
+interface HomePageProps {
+  searchParams: {
+    sort?: string;
+    query?: string;
+  };
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const currentSort = searchParams?.sort || 'recent';
+  const posts = await getPosts(currentSort);
+  const pageTitle = currentSort === 'popular' ? "Most Popular Posts" : "Latest Posts";
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="main-content-inner-container">
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Link href="/home">
+          <img src="/assets/Bobcat_board_text_logo.png" alt="Bobcat Board" style={{ maxWidth: '350px', cursor: 'pointer' }} />
+        </Link>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <h1 className="mb-2">{pageTitle}</h1>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <form method="GET" action="/home" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <label htmlFor="sort" className="text-muted" style={{ whiteSpace: 'nowrap', marginBottom: 0 }}>Sort by:</label>
+          <select
+            name="sort"
+            id="sort"
+            defaultValue={currentSort}
+            className="form-select-sm"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <option value="recent">Most Recent</option>
+            <option value="popular">Most Popular</option>
+          </select>
+           <button type="submit" className="btn btn-sm btn-secondary">Sort</button>
+        </form>
+
+        <form action="/search" method="get" style={{ width: 'auto', display: 'flex', alignItems: 'baseline', gap: '6px', justifyContent: 'flex-end' }}>
+            <input type="text" name="query" placeholder="Search posts..." defaultValue={searchParams?.query || ''} style={{ borderRadius: '25px' }}/>
+            <button type="submit" className="btn btn-primary">Search</button>
+        </form>
+      </div>
+
+      {posts && posts.length > 0 ? (
+        <div className="feed-grid">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+          <div>
+            <Link href="/topics">
+              <button type="button" className="footer-button">+</button>
+            </Link>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <div className="flash info">
+          No posts have been made yet. Be the first to create one!
+        </div>
+      )}
     </div>
   );
 }

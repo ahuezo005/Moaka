@@ -1,5 +1,5 @@
 import Layout from '../../components/Layout';
-import PostCard from '../../components/PostCard'; // Adjust path
+import PostCard from '../../components/PostCard';
 // import ClientLayoutLogic from '../../components/ClientLayoutLogic'; // Assuming this wraps children in root layout
 
 async function getPosts(sort = 'recent') {

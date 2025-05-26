@@ -1,26 +1,58 @@
-
 "use client";
 
 import Link from 'next/link';
+import { MouseEvent, FormEvent } from 'react';
 
-// import { copyToClipboard } from '../utils/copyToClipboard'; // Assume you create this utility
-// Placeholder for copyToClipboard - move to a utils file
-const copyToClipboard = (element) => {
+interface Author {
+  username: string;
+}
+
+interface Topic {
+  slug: string;
+  name: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  timestamp: string;
+  media_url: string | null;
+  tag: string | null;
+  score: number;
+  replies_count: number;
+  author: Author;
+  topic: Topic;
+}
+
+interface PostCardProps {
+  post: Post;
+}
+
+const copyToClipboard = (element: HTMLElement) => {
   const url = element.getAttribute('data-post-url');
   const originalText = element.textContent;
 
-  function updateTextWithFade(newText) {
+  if (!url) {
+    console.error('No post URL found on element');
+    return;
+  }
+
+  function updateTextWithFade(newText: string) {
     element.style.opacity = '0.5';
     setTimeout(() => {
-      element.textContent = newText;
-      element.style.opacity = '1';
+      if (element) {
+        element.textContent = newText;
+        element.style.opacity = '1';
+      }
     }, 200);
   }
+
   navigator.clipboard.writeText(url)
     .then(() => {
       updateTextWithFade('Copied!');
       setTimeout(() => {
-        updateTextWithFade(originalText);
+        updateTextWithFade(originalText || 'Share');
       }, 3000);
     })
     .catch(err => {
@@ -29,20 +61,19 @@ const copyToClipboard = (element) => {
 };
 
 
-export default function PostCard({ post }) {
-  const handleVote = async (voteType) => {
+export default function PostCard({ post }: PostCardProps) {
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
     console.log(`Voted ${voteType} for post ${post.id}`);
-
-    //requires api implementation
+    // Requires API implementation
   };
 
-  const request = {
-      scheme: 'http',
-      host: 'localhost:3000'
-  };
+  let fullPostUrl = '';
+  if (typeof window !== 'undefined') {
+    fullPostUrl = `${window.location.protocol}//${window.location.host}/post/${post.id}?origin=feed`;
+  } else {
+    fullPostUrl = `/post/${post.id}?origin=feed`;
+  }
 
-  const postViewUrl = `/post/${post.id}?origin=feed`;
-  const fullPostUrl = `<span class="math-inline">\{request\.scheme\}\://</span>{request.host}${postViewUrl}`;
 
   return (
     <article className="content-card">
@@ -50,7 +81,7 @@ export default function PostCard({ post }) {
         <Link href={`/post/${post.id}?origin=feed`}>
           <span className="card-image-link" style={{cursor: 'pointer'}}>
             <img
-              src={`/uploads/${post.media_url}`}
+              src={post.media_url.startsWith('http') ? post.media_url : `/uploads/${post.media_url}`}
               alt={`Image for ${post.title}`}
               className="card-image"
             />
@@ -77,11 +108,11 @@ export default function PostCard({ post }) {
         </p>
         <div className="post-interactions">
           <div className="vote-controls">
-            <form onSubmit={(e) => { e.preventDefault(); handleVote('upvote'); }} className="vote-form-inline">
+            <form onSubmit={(e: FormEvent<HTMLFormElement>) => { e.preventDefault(); handleVote('upvote'); }} className="vote-form-inline">
               <button type="submit" aria-label="Upvote">👍</button>
             </form>
             <span className="vote-score">{post.score}</span>
-            <form onSubmit={(e) => { e.preventDefault(); handleVote('downvote'); }} className="vote-form-inline">
+            <form onSubmit={(e: FormEvent<HTMLFormElement>) => { e.preventDefault(); handleVote('downvote'); }} className="vote-form-inline">
               <button type="submit" aria-label="Downvote">👎</button>
             </form>
           </div>
@@ -99,7 +130,7 @@ export default function PostCard({ post }) {
             className="share-link"
             style={{ cursor: 'pointer', color: '#689f38', transition: 'opacity 0.3s ease-in-out' }}
             data-post-url={fullPostUrl}
-            onClick={(e) => copyToClipboard(e.currentTarget)}
+            onClick={(e: MouseEvent<HTMLSpanElement>) => copyToClipboard(e.currentTarget)}
           >
             Share
           </span>
